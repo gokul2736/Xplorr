@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project: Xplorr</title>
+    <style>
+        /* ... CSS variables ... */
+        :root {
+            --primary: #2563eb;
+            --bg-sidebar: #f8fafc;
+            --bg-main: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #22c55e;
+            --budget-low: #16a34a;
+            --budget-mid: #ca8a04;
+            --budget-high: #dc2626;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ... Sidebar Styles ... */
+        aside {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        /* ... Brand, Nav, Controls, Progress ... */
+        .brand {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+
+        .brand p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .nav-links {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: #e2e8f0;
+        }
+
+        .nav-item.active {
+            background: #eff6ff;
+            border-left-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .controls-container {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            background: #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            width: 100%;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: #e2e8f0; }
+
+        .btn-danger { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fecaca; }
+
+        .progress-container {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            background: var(--bg-sidebar);
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #cbd5e1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+        }
+
+        /* ... Main Content ... */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--bg-main);
+            position: relative;
+        }
+
+        .mobile-header {
+            display: none;
+            padding: 1rem;
+            background: var(--bg-main);
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .hamburger {
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .content-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* --- SECTION VISIBILITY CONTROL --- */
+        section {
+            display: none;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        section.active-section {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .section-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        /* ... Survival Grid ... */
+        .survival-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        .card li {
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            line-height: 1.5;
+        }
+        
+        .card li::before {
+            content: "•";
+            color: var(--text-muted);
+            font-weight: bold;
+            display: inline-block;
+            margin-right: 0.75rem;
+            font-size: 1.2rem;
+            line-height: 0;
+        }
+
+        /* ... Task List ... */
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+            border-radius: 6px;
+        }
+
+        .task-item:hover {
+            background: #f8fafc;
+        }
+
+        .checkbox-wrapper {
+            margin-right: 1rem;
+            padding-top: 2px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        .task-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            outline: none;
+        }
+
+        /* ... Editing Styles ... */
+        body.editing-mode .task-title, 
+        body.editing-mode .task-meta {
+            border: 1px dashed #cbd5e1;
+            padding: 2px 4px;
+            background: #fff;
+            cursor: text;
+        }
+        
+        body.editing-mode .task-title:focus, 
+        body.editing-mode .task-meta:focus {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+
+        .delete-btn {
+            display: none;
+            color: var(--danger);
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-left: 1rem;
+            padding: 0 0.5rem;
+        }
+
+        body.editing-mode .delete-btn {
+            display: block;
+        }
+
+        .add-btn-container {
+            display: none;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        body.editing-mode .add-btn-container {
+            display: block;
+        }
+
+        .add-item-btn {
+            background: #f1f5f9;
+            color: var(--primary);
+            border: 1px dashed var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .add-item-btn:hover {
+            background: #e0f2fe;
+        }
+
+        .cost-tag {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+
+        .cost-low { background: #dcfce7; color: var(--budget-low); }
+        .cost-mid { background: #fef9c3; color: var(--budget-mid); }
+        .cost-high { background: #fee2e2; color: var(--budget-high); }
+
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .task-item.completed .task-meta {
+            opacity: 0.6;
+        }
+
+        /* --- MODAL STYLES --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            aside {
+                position: fixed;
+                left: -280px;
+                height: 100%;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            }
+
+            aside.open {
+                transform: translateX(280px);
+            }
+
+            .mobile-header {
+                display: flex;
+            }
+
+            main {
+                padding-top: 0;
+            }
+            
+            .content-wrapper {
+                padding: 1rem;
+            }
+
+            .survival-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-header">
+        <div class="brand">
+            <h1>Xplorr</h1>
+        </div>
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    </div>
+
+    <aside id="sidebar">
+        <div class="brand">
+            <h1>Xplorr</h1>
+            <p>Enjoyy Fandagaww</p>
+        </div>
+        
+        <nav class="nav-links">
+            <a class="nav-item active" onclick="scrollToSection('survival')">🎒 Survival & Hacks</a>
+            <a class="nav-item" onclick="scrollToSection('zone1')">📍 Zone 1: Backyard</a>
+            <a class="nav-item" onclick="scrollToSection('zone2')">🌊 Zone 2: ECR Streak</a>
+            <a class="nav-item" onclick="scrollToSection('zone3')">🏙️ Zone 3: City Core</a>
+            <a class="nav-item" onclick="scrollToSection('zone4')">🛍️ Zone 4: Commercial</a>
+            <a class="nav-item" onclick="scrollToSection('zone5')">🍛 Zone 5: North Chennai</a>
+            <a class="nav-item" onclick="scrollToSection('zone6')">🏡 Zone 6: Posh Hubs</a>
+            <a class="nav-item" onclick="scrollToSection('zone7')">🏔️ Zone 7: Escapes</a>
+            <a class="nav-item" onclick="scrollToSection('zone8')">🚂 Zone 8: Transit</a>
+            <a class="nav-item" onclick="scrollToSection('zone9')">🎭 Zone 9: Micro-X</a>
+            <a class="nav-item" onclick="scrollToSection('zone10')">✈️ Zone 10: Airport/Mall</a>
+            <a class="nav-item" onclick="scrollToSection('zone11')">🔮 Zone 11: Hidden Gems</a>
+            <a class="nav-item" onclick="scrollToSection('zone12')">🍔 Zone 12: Late Night</a>
+            <a class="nav-item" onclick="scrollToSection('zone13')">👯 Zone 13: Friends' Recs</a>
+        </nav>
+
+        <div class="controls-container">
+            <button class="btn btn-outline" id="edit-toggle" onclick="toggleEditMode()">✏️ Enable Editing</button>
+            <button class="btn btn-danger" onclick="resetData()" style="display:none;" id="reset-btn">Reset to Default</button>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-label">
+                <span>Mission Progress</span>
+                <span id="progress-text">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+    </aside>
+
+    <main id="main-content">
+        <div class="content-wrapper">
+            
+            <section id="survival" class="active-section">
+                <h2>🎒 Survival & Transport Protocol</h2>
+                <div class="section-desc">Essential intelligence for the Thandalam Agent.</div>
+
+                <div class="survival-grid">
+                    <div class="card">
+                        <h3>💰 Budget Key</h3>
+                        <ul>
+                            <li>💸 <strong>Student Mode</strong> (&lt;₹300)</li>
+                            <li>💸💸 <strong>Weekend Plan</strong> (₹400-900)</li>
+                            <li>💸💸💸 <strong>Rich Kid Mode</strong> (&gt;₹1000)</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>🚌 Thandalam Bus Hacks</h3>
+                        <ul>
+                            <li><strong>To T. Nagar:</strong> Bus 554, 591</li>
+                            <li><strong>To Marina:</strong> Bus 25G (Poonamallee)</li>
+                            <li><strong>To CMBT:</strong> Bus 153, 54 Series</li>
+                            <li><strong>Metro Hack:</strong> Share auto to Airport Metro</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>🎒 Kit Bag</h3>
+                        <ul>
+                            <li>1L Water Bottle (Mandatory)</li>
+                            <li>Power Bank</li>
+                            <li>Metro Card</li>
+                            <li>Handkerchief</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <div id="dynamic-zones"></div>
+
+        </div>
+    </main>
+
+    <!-- ADD ITEM MODAL -->
+    <div class="modal-overlay" id="addItemModal">
+        <div class="modal">
+            <h3>Add New Experience</h3>
+            <div class="form-group">
+                <label for="itemName">Place / Activity Name</label>
+                <input type="text" id="itemName" placeholder="e.g. Hidden Juice Shop">
+            </div>
+            <div class="form-group">
+                <label for="itemDesc">Description / Distance</label>
+                <input type="text" id="itemDesc" placeholder="e.g. Near college gate (~2km)">
+            </div>
+            <div class="form-group">
+                <label for="itemCost">Budget Category</label>
+                <select id="itemCost">
+                    <option value="1">💸 Student Mode (&lt;₹300)</option>
+                    <option value="2">💸💸 Weekend Plan (₹400-900)</option>
+                    <option value="3">💸💸💸 Rich Kid Mode (&gt;₹1000)</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" style="width:auto" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" style="width:auto" onclick="submitNewItem()">Add Item</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data
+        const defaultZones = {
+            zone1: {
+                title: "📍 Zone 1: The Backyard",
+                desc: "Thandalam, Poonamallee & Sriperumbudur. Post-college hours.",
+                items: [
+                    { t: "Chembarambakkam Lake View Point", i: "Dist: ~5km | Best for evening sunsets.", c: 1, d: false },
+                    { t: "Queens Land", i: "Dist: ~3km | Theme park with 'Free Fall' Tower.", c: 2, d: false },
+                    { t: "EVP Film City", i: "Dist: ~4km | Massive film sets & events venue.", c: 2, d: false },
+                    { t: "Madras Motor Race Track", i: "Dist: ~12km | Irungattukottai. Watch races on weekends.", c: 2, d: false },
+                    { t: "Sriperumbudur Adikesava Perumal Temple", i: "Dist: ~15km | Ancient architecture, Ramanuja's birthplace.", c: 1, d: false },
+                    { t: "Rajiv Gandhi Memorial", i: "Dist: ~15km | Quiet park for walking.", c: 1, d: false },
+                    { t: "Vallakottai Murugan Temple", i: "Dist: ~25km | Famous 7-foot Murugan statue.", c: 1, d: false },
+                    { t: "Poonamallee Vaitheeswaran Koil", i: "Dist: ~8km | Ancient Chola era temple.", c: 1, d: false },
+                    { t: "Gokulam Park", i: "Dist: ~8km | Simple evening walk spot in Poonamallee.", c: 1, d: false },
+                    { t: "Saveetha Food Court", i: "Dist: ~1km | Sneak in for student food variety.", c: 1, d: false },
+                    { t: "Nazarathpet Check Post Dhabas", i: "Dist: ~6km | Late night Roti/Dal spots.", c: 2, d: false },
+                    { t: "Gamers Galaxy", i: "Dist: ~8km | Poonamallee PC Gaming center.", c: 1, d: false }
+                ]
+            },
+            zone2: {
+                title: "🌊 Zone 2: The ECR Streak",
+                desc: "Beaches, Adrenaline & Long Drives. Best for Saturdays.",
+                items: [
+                    { t: "Thiruvanmiyur Beach", i: "Dist: ~32km | Cleaner than Marina, good start for ECR.", c: 1, d: false },
+                    { t: "Kottivakkam Beach", i: "Dist: ~34km | Has a wide walking track.", c: 1, d: false },
+                    { t: "VGP Universal Kingdom", i: "Dist: ~38km | Beachside theme park.", c: 2, d: false },
+                    { t: "VGP Marine Kingdom", i: "Dist: ~38km | India's first underwater tunnel aquarium.", c: 3, d: false },
+                    { t: "Snow Kingdom", i: "Dist: ~38km | -6°C snow experience in Chennai heat.", c: 3, d: false },
+                    { t: "Kart Attack", i: "Dist: ~40km | Outdoor Go-Karting track.", c: 2, d: false },
+                    { t: "MGM Dizzee World", i: "Dist: ~45km | Best roller coasters in the city.", c: 2, d: false },
+                    { t: "DakshinaChitra", i: "Dist: ~42km | Living history museum of South India.", c: 2, d: false },
+                    { t: "Muttukadu Boat House", i: "Dist: ~45km | Rowing/Speed Boat in backwaters.", c: 2, d: false },
+                    { t: "Surf Turf", i: "Dist: ~50km | Kovalam. Breakfast with surfer view.", c: 3, d: false },
+                    { t: "Madras Crocodile Bank", i: "Dist: ~55km | Reptile zoo & night safari.", c: 2, d: false },
+                    { t: "Mahabalipuram Shore Temple", i: "Dist: ~65km | UNESCO Heritage site by the sea.", c: 1, d: false },
+                    { t: "Krishna's Butter Ball", i: "Dist: ~65km | Giant rock balancing on a slope.", c: 1, d: false },
+                    { t: "Moonrakers", i: "Dist: ~65km | Mahabs. Famous for seafood lunch.", c: 3, d: false },
+                    { t: "Alamparai Fort", i: "Dist: ~115km | 17th-century ruins. Great for photos.", c: 1, d: false }
+                ]
+            },
+            zone3: {
+                title: "🏙️ Zone 3: The City Core",
+                desc: "Mylapore, San Thome, Besant Nagar. Culture overload.",
+                items: [
+                    { t: "Kapaleeshwarar Temple", i: "Dist: ~28km | Mylapore's Dravidian masterpiece.", c: 1, d: false },
+                    { t: "San Thome Basilica", i: "Dist: ~29km | Gothic Church built over St. Thomas tomb.", c: 1, d: false },
+                    { t: "St. Thomas Mount Shrine", i: "Dist: ~20km | Best panoramic city view.", c: 1, d: false },
+                    { t: "Rayar's Mess", i: "Dist: ~28km | Hidden mess famous for Idli/Pongal.", c: 1, d: false },
+                    { t: "Mylapore Ganapathy's", i: "Dist: ~28km | Famous for pure Ghee sweets.", c: 1, d: false },
+                    { t: "Kalathi Newspaper Mart", i: "Dist: ~28km | Iconic Rose Milk shop.", c: 1, d: false },
+                    { t: "Bessy Beach (Elliot's)", i: "Dist: ~30km | Youth hangout spot, cleaner sand.", c: 1, d: false },
+                    { t: "Broken Bridge", i: "Dist: ~32km | View of Adyar estuary meeting sea.", c: 1, d: false },
+                    { t: "Murugan Idli Shop", i: "Dist: ~30km | Bessy. Authentic tasty tiffins.", c: 2, d: false },
+                    { t: "Theosophical Society", i: "Dist: ~30km | Adyar. Massive green campus & banyan tree.", c: 1, d: false }
+                ]
+            },
+            zone4: {
+                title: "🛍️ Zone 4: The Commercial Heart",
+                desc: "T. Nagar, Nungambakkam, Egmore. Shopping & Chaos.",
+                items: [
+                    { t: "Pondy Bazaar", i: "Dist: ~24km | Main shopping district for clothes.", c: 1, d: false },
+                    { t: "Ranganathan Street", i: "Dist: ~24km | The busiest street. Survival challenge.", c: 1, d: false },
+                    { t: "Sathyam Cinemas", i: "Dist: ~26km | Royapettah. Iconic movie experience.", c: 2, d: false },
+                    { t: "Express Avenue Mall", i: "Dist: ~27km | Royapettah. Large central mall.", c: 2, d: false },
+                    { t: "Amethyst", i: "Dist: ~27km | Royapettah. Colonial mansion cafe.", c: 3, d: false },
+                    { t: "Semmozhi Poonga", i: "Dist: ~26km | Botanical garden in the city center.", c: 1, d: false },
+                    { t: "Arknemesis Gaming", i: "Dist: ~25km | Nungambakkam. High-end gaming.", c: 2, d: false },
+                    { t: "Connemara Public Library", i: "Dist: ~28km | Egmore. Old world vibes.", c: 1, d: false },
+                    { t: "Egmore Museum", i: "Dist: ~28km | Bronze gallery & dinosaur fossils.", c: 1, d: false }
+                ]
+            },
+            zone5: {
+                title: "🍛 Zone 5: North Chennai",
+                desc: "Sowcarpet & George Town. Food Coma Central.",
+                items: [
+                    { t: "Madras High Court", i: "Dist: ~32km | Stunning red Indo-Saracenic building.", c: 1, d: false },
+                    { t: "Mint Street", i: "Dist: ~33km | The ultimate street food walk.", c: 1, d: false },
+                    { t: "Kakada Ramprasad", i: "Dist: ~33km | Famous for Badam Milk & Jalebi.", c: 2, d: false },
+                    { t: "Anmol Lassiwala", i: "Dist: ~33km | Huge glass of Kesar Lassi.", c: 1, d: false },
+                    { t: "Murukku Sandwich Stall", i: "Dist: ~33km | Unique Sowcarpet snack.", c: 1, d: false },
+                    { t: "Novelty Tea House", i: "Dist: ~33km | Pav Bhaji specialist.", c: 2, d: false },
+                    { t: "Ritchie Street", i: "Dist: ~30km | Electronics spare parts hub.", c: 1, d: false },
+                    { t: "Burma Bazaar", i: "Dist: ~32km | Parrys. Imported goods & Atho noodles.", c: 1, d: false }
+                ]
+            },
+            zone6: {
+                title: "🏡 Zone 6: Anna Nagar & Kilpauk",
+                desc: "Wide roads, posh cafes, and aesthetics.",
+                items: [
+                    { t: "Anna Nagar Tower Park", i: "Dist: ~20km | Climb the tower for a view.", c: 1, d: false },
+                    { t: "VR Chennai Mall", i: "Dist: ~18km | Aesthetic mall & PVR PXL cinema.", c: 2, d: false },
+                    { t: "Ampa Skywalk Mall", i: "Dist: ~22km | Famous for the skywalk bridge.", c: 1, d: false },
+                    { t: "Fusilli Reasons", i: "Dist: ~24km | Kilpauk. Student-friendly pasta.", c: 1, d: false },
+                    { t: "Little White Kitchen", i: "Dist: ~24km | Kilpauk. Waffles & quirky decor.", c: 2, d: false },
+                    { t: "The Void", i: "Dist: ~20km | Sports bar vibe (Strictly 21+).", c: 3, d: false },
+                    { t: "Haunted", i: "Dist: ~20km | Horror-themed dining experience.", c: 3, d: false }
+                ]
+            },
+            zone7: {
+                title: "🏔️ Zone 7: The Escapes",
+                desc: "Long distance (>50km). Requires a full day bunk.",
+                items: [
+                    { t: "Vedanthangal Bird Sanctuary", i: "Dist: ~60km | Migratory birds (Season: Nov-Feb).", c: 1, d: false },
+                    { t: "Arignar Anna Zoo", i: "Dist: ~25km | Vandalur. Massive zoo, rent a cycle.", c: 1, d: false },
+                    { t: "Kanchipuram Temples", i: "Dist: ~35km | City of 1000 temples.", c: 1, d: false },
+                    { t: "Tada Falls", i: "Dist: ~100km | Trekking & waterfalls on AP border.", c: 1, d: false },
+                    { t: "Pichavaram Mangrove Forest", i: "Dist: ~210km | Boating in dense mangroves.", c: 2, d: false },
+                    { t: "Gingee Fort", i: "Dist: ~130km | 'Troy of the East'. Hard trek.", c: 1, d: false },
+                    { t: "Auroville & Pondy", i: "Dist: ~135km | Weekend trip. French colony.", c: 3, d: false },
+                    { t: "Pulicat Lake", i: "Dist: ~75km | Boating & Flamingo watching.", c: 2, d: false }
+                ]
+            },
+            zone8: {
+                title: "🚂 Zone 8: Transit Experience",
+                desc: "Trains and Metro rides for the vibe.",
+                items: [
+                    { t: "MRTS Ride", i: "Dist: ~25km (Station) | Velachery to Chepauk aerial view.", c: 1, d: false },
+                    { t: "Chennai Metro", i: "Dist: ~25km (Airport Stn) | Airport to Wimco Nagar AC ride.", c: 1, d: false },
+                    { t: "Suburban Train", i: "Dist: ~25km (Park Stn) | Park to St. Thomas Mount.", c: 1, d: false },
+                    { t: "Central Station", i: "Dist: ~30km | See the red heritage building at night.", c: 1, d: false }
+                ]
+            },
+            zone9: {
+                title: "🎭 Zone 9: Micro-Experiences",
+                desc: "Small things to do, eat, or see.",
+                items: [
+                    { t: "Drink Goli Soda", i: "Any local shop | Fizzy local drink.", c: 1, d: false },
+                    { t: "Eat Molaga Bajji", i: "Beach side | Spicy chilli fritters.", c: 1, d: false },
+                    { t: "Buy Second-hand book", i: "Dist: ~30km | Moore Market treasures.", c: 1, d: false },
+                    { t: "Watch FDFS", i: "Dist: ~18km | Rohini Theatre (Koyambedu). Fan craze.", c: 1, d: false },
+                    { t: "Portrait sketch", i: "Dist: ~28km | Marina Beach artists.", c: 1, d: false },
+                    { t: "Eat Jigarthanda", i: "Dist: ~30km | Murugan Idli. Madurai special.", c: 1, d: false },
+                    { t: "Fish Market Visit", i: "Dist: ~35km | Kasimedu at 4 AM. Chaos.", c: 1, d: false }
+                ]
+            },
+            zone10: {
+                title: "✈️ Zone 10: Airport & Mall",
+                desc: "Aerohub, Citi Centre, and Runway views.",
+                items: [
+                    { t: "Aerohub Mall", i: "Dist: ~25km | Mall outside airport. 24/7 Food Court.", c: 2, d: false },
+                    { t: "PVR Aerohub", i: "Dist: ~25km | Late night movie with new screens.", c: 2, d: false },
+                    { t: "Airport Visitor Area", i: "Dist: ~25km | View from Metro Station Bridge.", c: 1, d: false },
+                    { t: "Chennai Citi Centre", i: "Dist: ~29km | Mylapore. OG Mall with sea view.", c: 2, d: false },
+                    { t: "Citi Centre Roof Top", i: "Dist: ~29km | Secret view of Santhome Basilica.", c: 1, d: false }
+                ]
+            },
+            zone11: {
+                title: "🔮 Zone 11: My Hidden Gems",
+                desc: "For random spots you find on the way.",
+                items: [
+                    { t: "Example: That cool tea shop", i: "Near college gate", c: 1, d: false }
+                ]
+            },
+            zone12: {
+                title: "🍔 Zone 12: Late Night Cravings",
+                desc: "Essential for hostel life.",
+                items: [
+                    { t: "Example: Midnight Maggi Point", i: "Open till 3 AM", c: 1, d: false }
+                ]
+            },
+            zone13: {
+                title: "👯 Zone 13: Friends' Recs",
+                desc: "When seniors/friends suggest places.",
+                items: [
+                    { t: "Example: Senior suggested this cafe", i: "Check it out later", c: 2, d: false }
+                ]
+            }
+        };
+
+        // --- APP LOGIC ---
+        let appData = {};
+        let isEditing = false;
+        let currentAddingZone = null; // Track which zone we are adding to
+
+        function init() {
+            const savedData = localStorage.getItem('chennai_data_v2');
+            if (savedData) {
+                appData = JSON.parse(savedData);
+                for (const key in defaultZones) {
+                    if (!appData[key]) {
+                        appData[key] = JSON.parse(JSON.stringify(defaultZones[key]));
+                    }
+                }
+            } else {
+                appData = JSON.parse(JSON.stringify(defaultZones));
+                saveData();
+            }
+            renderZones();
+            recalcProgress();
+        }
+
+        function saveData() {
+            localStorage.setItem('chennai_data_v2', JSON.stringify(appData));
+            recalcProgress();
+        }
+
+        function renderZones() {
+            const container = document.getElementById('dynamic-zones');
+            container.innerHTML = '';
+
+            for (const [key, zone] of Object.entries(appData)) {
+                const section = document.createElement('section');
+                section.id = key;
+                
+                const header = document.createElement('h2');
+                header.innerText = zone.title;
+                
+                const desc = document.createElement('div');
+                desc.className = 'section-desc';
+                desc.innerText = zone.desc;
+
+                const ul = document.createElement('ul');
+                ul.className = 'task-list';
+                ul.id = `list-${key}`;
+
+                zone.items.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.className = `task-item ${item.d ? 'completed' : ''}`;
+                    
+                    let costHtml = '';
+                    let costClass = '';
+                    let costText = '';
+                    if(item.c == 1) { costClass = 'cost-low'; costText = '💸 Student'; }
+                    else if(item.c == 2) { costClass = 'cost-mid'; costText = '💸💸 Weekend'; }
+                    else { costClass = 'cost-high'; costText = '💸💸💸 Baller'; }
+                    
+                    costHtml = `<span class="cost-tag ${costClass}" onclick="cycleCost('${key}', ${index})">${costText}</span>`;
+
+                    li.innerHTML = `
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" ${item.d ? 'checked' : ''} onchange="toggleDone('${key}', ${index})">
+                        </div>
+                        <div class="task-content">
+                            <div class="task-title" contenteditable="${isEditing}" onblur="updateText('${key}', ${index}, 't', this)">${item.t} ${costHtml}</div>
+                            <div class="task-meta" contenteditable="${isEditing}" onblur="updateText('${key}', ${index}, 'i', this)">${item.i}</div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteItem('${key}', ${index})">🗑️</button>
+                    `;
+                    ul.appendChild(li);
+                });
+
+                const addBtnDiv = document.createElement('div');
+                addBtnDiv.className = 'add-btn-container';
+                // Changed from direct add to opening modal
+                addBtnDiv.innerHTML = `<button class="add-item-btn" onclick="openAddModal('${key}')">+ Add New Experience</button>`;
+
+                section.appendChild(header);
+                section.appendChild(desc);
+                section.appendChild(ul);
+                section.appendChild(addBtnDiv);
+                container.appendChild(section);
+            }
+        }
+
+        function toggleDone(zoneKey, index) {
+            appData[zoneKey].items[index].d = !appData[zoneKey].items[index].d;
+            const list = document.getElementById(`list-${zoneKey}`);
+            const item = list.children[index];
+            if(appData[zoneKey].items[index].d) {
+                item.classList.add('completed');
+            } else {
+                item.classList.remove('completed');
+            }
+            saveData();
+        }
+
+        function updateText(zoneKey, index, field, element) {
+            if (!isEditing) return;
+            appData[zoneKey].items[index][field] = element.innerText.trim();
+            saveData();
+        }
+
+        function cycleCost(zoneKey, index) {
+            if (!isEditing) return;
+            let current = appData[zoneKey].items[index].c;
+            current++;
+            if (current > 3) current = 1;
+            appData[zoneKey].items[index].c = current;
+            saveData();
+            renderZones();
+        }
+
+        // NEW MODAL LOGIC
+        function openAddModal(zoneKey) {
+            currentAddingZone = zoneKey;
+            // Clear fields
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemDesc').value = '';
+            document.getElementById('itemCost').value = '1';
+            // Show modal
+            document.getElementById('addItemModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('addItemModal').style.display = 'none';
+            currentAddingZone = null;
+        }
+
+        function submitNewItem() {
+            if (!currentAddingZone) return;
+            
+            const name = document.getElementById('itemName').value || "New Adventure";
+            const desc = document.getElementById('itemDesc').value || "Click to edit details";
+            const cost = parseInt(document.getElementById('itemCost').value);
+
+            appData[currentAddingZone].items.push({ 
+                t: name, 
+                i: desc, 
+                c: cost, 
+                d: false 
+            });
+            
+            saveData();
+            renderZones();
+            closeModal();
+        }
+
+        function deleteItem(zoneKey, index) {
+            if(confirm("Remove this item?")) {
+                appData[zoneKey].items.splice(index, 1);
+                saveData();
+                renderZones();
+            }
+        }
+
+        function toggleEditMode() {
+            isEditing = !isEditing;
+            const btn = document.getElementById('edit-toggle');
+            const resetBtn = document.getElementById('reset-btn');
+            
+            if (isEditing) {
+                document.body.classList.add('editing-mode');
+                btn.innerText = "✅ Done Editing";
+                btn.classList.replace('btn-outline', 'btn-primary');
+                resetBtn.style.display = 'block';
+            } else {
+                document.body.classList.remove('editing-mode');
+                btn.innerText = "✏️ Enable Editing";
+                btn.classList.replace('btn-primary', 'btn-outline');
+                resetBtn.style.display = 'none';
+            }
+            renderZones();
+        }
+
+        function resetData() {
+            if(confirm("WARNING: This will delete all your custom items and progress. Are you sure?")) {
+                localStorage.removeItem('chennai_data_v2');
+                location.reload();
+            }
+        }
+
+        function recalcProgress() {
+            let total = 0;
+            let checked = 0;
+            for (const zone of Object.values(appData)) {
+                zone.items.forEach(item => {
+                    total++;
+                    if(item.d) checked++;
+                });
+            }
+            const percentage = total === 0 ? 0 : Math.round((checked / total) * 100);
+            document.getElementById('progress-fill').style.width = `${percentage}%`;
+            document.getElementById('progress-text').innerText = `${percentage}%`;
+        }
+
+        // Updated Navigation Logic: Single View Mode
+        function scrollToSection(id) {
+            // Sidebar active state
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            if(event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+
+            // 1. Hide ALL sections
+            document.querySelectorAll('section').forEach(sec => {
+                sec.classList.remove('active-section');
+            });
+
+            // 2. Show ONLY the target section
+            const target = document.getElementById(id);
+            if (target) {
+                target.classList.add('active-section');
+            }
+
+            // 3. Scroll top
+            document.getElementById('main-content').scrollTop = 0;
+
+            // Mobile: Close sidebar
+            if(window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        init();
+
+    </script>
+</body>
+</html>
